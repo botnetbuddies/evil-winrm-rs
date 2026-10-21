@@ -6,6 +6,7 @@ mod open;
 mod output;
 #[cfg(feature = "mcp")]
 mod remote;
+mod stop;
 mod transport;
 mod worker;
 use anyhow::{Context, Result, bail};

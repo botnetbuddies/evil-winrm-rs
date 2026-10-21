@@ -3,10 +3,7 @@ use anyhow::Result;
 use async_trait::async_trait;
 use base64::{Engine, engine::general_purpose::STANDARD as B64};
 use psrp_rs::{PsrpError, PsrpTransport};
-use std::sync::{
-    Arc,
-    atomic::{AtomicBool, Ordering},
-};
+use std::sync::Arc;
 use winrm_rs::{OwnedShell, WinrmError};
 /// Owns a WSMan shell while borrowing the client kept alive by the session task.
 pub(super) struct Transport {
@@ -14,7 +11,7 @@ pub(super) struct Transport {
     pub(super) command_id: String,
     pub(super) pending_receive:
         Option<tokio::task::JoinHandle<Result<winrm_rs::ReceiveOutput, WinrmError>>>,
-    pub(super) stop_acknowledged: AtomicBool,
+    pub(super) stop: super::stop::StopRequest,
     pub(super) max_send_bytes: usize,
     pub(super) output_budget: Arc<super::limits::OutputBudget>,
 }
@@ -105,12 +102,16 @@ impl PsrpTransport for Transport {
             // Keep the receive task in the transport when cancellation selects
             // the stop branch. Dropping a Receive request can discard the
             // server's terminal pipeline state and hang cancellation forever.
-            let response = self
-                .pending_receive
-                .as_mut()
-                .unwrap()
-                .await
-                .map_err(|e| PsrpError::Protocol(format!("receive task failed: {e}")))?;
+            let response = tokio::select! {
+                biased;
+                result = self.stop.complete(), if self.stop.is_pending() => {
+                    result?;
+                    continue;
+                }
+                response = self.pending_receive.as_mut().unwrap() => {
+                    response.map_err(|e| PsrpError::Protocol(format!("receive task failed: {e}")))?
+                }
+            };
             self.pending_receive = None;
             match response {
                 Ok(out) if !out.stdout.is_empty() => {
@@ -118,7 +119,8 @@ impl PsrpTransport for Transport {
                     return Ok(out.stdout);
                 }
                 Ok(out) if out.done => {
-                    if self.stop_acknowledged.load(Ordering::Acquire) {
+                    self.stop.complete().await?;
+                    if self.stop.acknowledged() {
                         return Err(PsrpError::Cancelled);
                     }
                     return Err(PsrpError::Protocol(
@@ -131,9 +133,7 @@ impl PsrpTransport for Transport {
                 {
                     continue;
                 }
-                Err(e)
-                    if self.stop_acknowledged.load(Ordering::Acquire) && command_is_missing(&e) =>
-                {
+                Err(e) if self.stop.acknowledged() && command_is_missing(&e) => {
                     // Windows may dispose the command immediately after the
                     // acknowledged stop, without a final PSRP Stopped packet.
                     return Err(PsrpError::Cancelled);
@@ -143,6 +143,8 @@ impl PsrpTransport for Transport {
         }
     }
     async fn execute_pipeline(&mut self, bytes: &[u8], id: uuid::Uuid) -> psrp_rs::Result<()> {
+        // A terminal PSRP state can arrive just before the Signal HTTP reply.
+        self.stop.complete().await?;
         let fragments = fragment_batches(bytes, self.max_send_bytes)?;
         let first = fragments
             .first()
@@ -155,13 +157,13 @@ impl PsrpTransport for Transport {
         // happen before creating the next pipeline, including after Ctrl+C.
         if !self.command_id.is_empty() && self.command_id != shell.shell_id() {
             if let Err(e) = shell.signal_terminate(&self.command_id).await
-                && !(self.stop_acknowledged.load(Ordering::Acquire) && command_is_missing(&e))
+                && !(self.stop.acknowledged() && command_is_missing(&e))
             {
                 return Err(e.into());
             }
             self.command_id.clear();
         }
-        self.stop_acknowledged.store(false, Ordering::Release);
+        self.stop.reset();
         self.command_id = shell
             .start_command_with_id("", &[&B64.encode(first)], &id.to_string())
             .await?;
@@ -175,17 +177,17 @@ impl PsrpTransport for Transport {
         Ok(())
     }
     async fn signal_stop(&self) -> psrp_rs::Result<()> {
-        tracing::debug!("sending PowerShell stop request");
-        self.shell
+        let shell = self
+            .shell
             .as_ref()
-            .ok_or_else(|| PsrpError::Protocol("closed shell".into()))?
-            .signal_ctrl_c(&self.command_id)
-            .await?;
-        self.stop_acknowledged.store(true, Ordering::Release);
-        tracing::debug!("PowerShell stop acknowledged");
+            .ok_or_else(|| PsrpError::Protocol("closed shell".into()))?;
+        // Windows may wait for queued output to drain before acknowledging a
+        // stop. Continue Receive calls while that independent request runs.
+        self.stop.start(shell.clone(), self.command_id.clone());
         Ok(())
     }
     async fn close_shell(&mut self) -> psrp_rs::Result<()> {
+        self.stop.complete().await?;
         if let Some(task) = self.pending_receive.take() {
             task.abort();
         }
@@ -210,6 +212,9 @@ impl Drop for Transport {
         }
     }
 }
+
+#[cfg(all(test, feature = "mcp"))]
+mod cancellation_tests;
 
 #[cfg(test)]
 mod tests {

@@ -5,7 +5,7 @@ use anyhow::Context;
 use anyhow::Result;
 use base64::{Engine, engine::general_purpose::STANDARD as B64};
 use psrp_rs::{Pipeline, RunspacePool};
-use std::sync::{Arc, atomic::AtomicBool};
+use std::sync::Arc;
 use winrm_rs::{WinrmClient, WinrmConfig, WinrmCredentials};
 pub(super) struct PreparedClient {
     pub client: WinrmClient,
@@ -99,7 +99,7 @@ pub(super) async fn runspace(
         shell: Some(shell.into_owned()),
         command_id,
         pending_receive: None,
-        stop_acknowledged: AtomicBool::new(false),
+        stop: super::stop::StopRequest::default(),
         max_send_bytes: prepared.max_send_bytes,
         output_budget: output_budget.clone(),
     };

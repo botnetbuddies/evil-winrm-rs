@@ -2,7 +2,7 @@
 use super::{ConsoleEvent, Output, host::HostBuffer, transport::Transport};
 use crate::command::{interactive_pipeline, jea_pipelines};
 use anyhow::Result;
-use psrp_rs::{Pipeline, PsValue, RunspacePool};
+use psrp_rs::{Pipeline, PsValue, PsrpError, RunspacePool};
 use tokio::sync::mpsc;
 use tokio_util::sync::CancellationToken;
 pub(super) struct Execution {
@@ -66,6 +66,12 @@ pub(super) async fn run(
                 .run_all_streams_with_cancel(pool, cancel.clone())
                 .await?
         };
+        // A pipeline can finish while Ctrl+C is in flight. Preserve the
+        // cancellation so a transfer does not start its next chunk or report
+        // the producer's closed input channel instead of the interruption.
+        if cancel.is_cancelled() {
+            return Err(PsrpError::Cancelled.into());
+        }
         // The host already captured output in callback order.
         result.output.clear();
         output.append(result);
