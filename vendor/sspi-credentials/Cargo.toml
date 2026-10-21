@@ -1,0 +1,12 @@
+[package]
+name = "sspi-credentials"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+description = "Scoped explicit Kerberos password credentials using Windows SSPI"
+
+[target.'cfg(windows)'.dependencies]
+anyhow = "1"
+cross-krb5 = "0.5"
+zeroize = "1"
+windows = { version = "0.62", features = ["Win32_Security_Authentication_Identity", "Win32_Security_Credentials", "Win32_System_Rpc"] }

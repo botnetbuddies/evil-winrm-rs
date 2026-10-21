@@ -1,0 +1,80 @@
+[package]
+name = "evil-winrm-rs"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.98"
+description = "An interactive WinRM shell with persistent PowerShell sessions"
+repository = "https://github.com/botnetbuddies/evil-winrm-rs"
+documentation = "https://github.com/botnetbuddies/evil-winrm-rs/wiki"
+license = "LGPL-3.0-or-later"
+default-run = "evil-winrm-rs"
+
+[workspace]
+members = [".", "vendor/winrm-rs", "vendor/gssapi-cache", "vendor/sspi-credentials", "vendor/kerberos-cache"]
+default-members = ["."]
+exclude = ["vendor/psrp-rs", "vendor/rustyline", "vendor/reqwest"]
+resolver = "3"
+
+[features]
+default = ["kerberos", "mcp", "credssp", "pkcs12"]
+kerberos = ["winrm-rs/kerberos", "dep:kerberos-cache"]
+credssp = ["winrm-rs/credssp"]
+pkcs12 = ["winrm-rs/pkcs12"]
+mcp = ["dep:rmcp", "dep:axum", "dep:schemars"]
+
+[dependencies]
+anyhow = "1"
+kerberos-cache = { path = "vendor/kerberos-cache", optional = true }
+async-trait = "0.1"
+base64 = "0.23"
+clap = { version = "4", features = ["derive", "env"] }
+chrono = "0.4"
+dirs = "6"
+dns-lookup = "4"
+encoding_rs = "0.8"
+flate2 = "1"
+hex = "0.4"
+indicatif = "0.18"
+md-5 = "0.11"
+psrp-rs = "=2.0.2"
+rpassword = "7"
+reqwest = { version = "0.13", default-features = false, features = ["rustls", "socks", "json", "stream"] }
+# Cooperative terminal signal handling leaves SIGINT available to Tokio while
+# a remote pipeline is running.
+rustyline = { version = "17", features = ["derive", "signal-hook"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tempfile = "3"
+tokio = { version = "1", features = ["full"] }
+tokio-util = "0.7"
+tokio-stream = "0.1"
+http-body-util = "0.1"
+bytes = "1"
+secrecy = "0.10"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+uuid = { version = "1", features = ["v4"] }
+winrm-rs = "=1.2.2"
+zeroize = "1"
+axum = { version = "0.8", optional = true }
+rmcp = { version = "=3.6.0", optional = true, features = ["transport-streamable-http-server"] }
+schemars = { version = "1", optional = true }
+
+[patch.crates-io]
+reqwest = { path = "vendor/reqwest" }
+winrm-rs = { path = "vendor/winrm-rs" }
+psrp-rs = { path = "vendor/psrp-rs" }
+rustyline = { path = "vendor/rustyline" }
+
+[dev-dependencies]
+rskrb5 = { version = "=0.2.0", default-features = false }
+roxmltree = "0.21"
+reqwest = { version = "0.13", default-features = false, features = ["json"] }
+
+[profile.release]
+lto = "thin"
+strip = true
+
+
+[target.'cfg(unix)'.dependencies]
+nix = { version = "0.30", features = ["process"] }

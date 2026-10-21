@@ -1,0 +1,48 @@
+name: Rust checks
+on: [push, pull_request]
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    env:
+      CARGO_TARGET_DIR: ${{ github.workspace }}/target
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '8.0.x'
+      - run: sudo apt-get update && sudo apt-get install -y libkrb5-dev libclang-dev libssl-dev pkg-config
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --all-targets --all-features -- -D warnings
+      - run: cargo clippy -p kerberos-cache --all-targets --locked -- -D warnings
+      - run: cargo clippy --manifest-path vendor/psrp-rs/Cargo.toml --all-targets -- -D warnings
+      - run: cargo test --workspace --all-features --locked
+      - run: cargo test --manifest-path vendor/psrp-rs/Cargo.toml --lib --test end_to_end
+      - run: cargo test --lib generated_helpers_parse_in_powershell -- --ignored
+      - run: cargo test --test local_powershell -- --ignored
+      - run: cargo check --no-default-features --locked
+  container:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t evil-winrm-rs:test .
+      - run: docker run --rm evil-winrm-rs:test --version
+      - run: docker run --rm evil-winrm-rs:test --help
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '8.0.x'
+      - run: cargo test --locked
+      - run: cargo test -p kerberos-cache --locked
+      - run: cargo clippy --all-targets --locked -- -D warnings
+      - run: cargo clippy -p kerberos-cache --all-targets --locked -- -D warnings
+      - run: cargo test --lib generated_helpers_parse_in_powershell -- --ignored
+      - run: cargo test --test local_powershell -- --ignored

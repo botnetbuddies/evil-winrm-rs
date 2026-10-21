@@ -1,0 +1,10 @@
+[package]
+name = "gssapi-cache"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+description = "Scoped GSSAPI credential cache selection without environment mutation"
+
+[dependencies]
+libgssapi = "0.11"
+libgssapi-sys = "0.3"

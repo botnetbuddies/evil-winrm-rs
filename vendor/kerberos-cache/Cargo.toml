@@ -1,0 +1,31 @@
+[package]
+name = "kerberos-cache"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+description = "Portable file-backed Kerberos contexts for Windows WinRM"
+
+[dependencies]
+anyhow = "1"
+getrandom = "0.3"
+hmac = "0.13"
+md-5 = "0.11"
+rc4 = { version = "0.2", features = ["zeroize"] }
+subtle = "2"
+zeroize = "1"
+rskrb5 = { version = "=0.2.0", default-features = false, features = ["spnego", "tokio"] }
+rasn-kerberos = "0.28"
+
+[dev-dependencies]
+base64 = "0.23"
+bytes = "1"
+chrono = "0.4"
+tempfile = "3"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+
+[target.'cfg(unix)'.dev-dependencies]
+cross-krb5 = "0.5"
+gssapi-cache = { path = "../gssapi-cache" }
+
+[lints.rust]
+unsafe_code = "forbid"

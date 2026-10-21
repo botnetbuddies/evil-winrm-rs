@@ -1,0 +1,97 @@
+[package]
+name = "psrp-rs"
+version = "2.0.2"
+edition = "2024"
+rust-version = "1.98"
+license = "MIT OR Apache-2.0"
+authors = ["Wernert Loïc <45450136+muchiny@users.noreply.github.com>"]
+description = "Async PowerShell Remoting Protocol (MS-PSRP) client for Rust, built on winrm-rs."
+repository = "https://github.com/muchini/psrp-rs"
+documentation = "https://docs.rs/psrp-rs"
+homepage = "https://github.com/muchini/psrp-rs"
+keywords = ["powershell", "psrp", "winrm", "remoting", "windows"]
+categories = ["network-programming", "api-bindings"]
+readme = "README.md"
+include = [
+    "src/**/*.rs",
+    "examples/**/*.rs",
+    "tests/**/*.rs",
+    "Cargo.toml",
+    "LICENSE-MIT",
+    "LICENSE-APACHE",
+    "README.md",
+    "CHANGELOG.md",
+]
+
+[dependencies]
+# 1.2.1 is a floor, not a convenience. 1.2 carries the fix for the XML
+# injection in the SOAP `ResourceURI` header and raises winrm-rs's MSRV
+# to 1.98 to match ours; 1.2.1 makes `Shell::close` address Delete under
+# the shell's own ResourceURI, without which every PSRP pool this crate
+# closes leaves its runspace running on the server. Allowing anything
+# older would let a consumer resolve a build that leaks.
+winrm-rs = "1.2.2"
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "time", "sync"] }
+tokio-util = { version = "0.7", features = ["rt"] }
+thiserror = "2"
+tracing = "0.1"
+quick-xml = "0.42"
+uuid = { version = "1", features = ["v4"] }
+indexmap = { version = "2" }
+async-trait = "0.1"
+rsa = { version = "0.9", default-features = false, features = ["sha1"] }
+aes = "0.9"
+sha1 = { version = "0.10", default-features = false }
+rand = "0.8"
+zeroize = { version = "1", features = ["zeroize_derive"] }
+serde = { version = "1", features = ["derive"], optional = true }
+russh = { version = "0.63", optional = true }
+hmac = { version = "0.12", optional = true }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "test-util", "time"] }
+async-trait = "0.1"
+uuid = { version = "1", features = ["v4"] }
+
+[features]
+default = []
+ssh = ["dep:russh", "dep:hmac"]
+serde = ["dep:serde", "uuid/serde", "indexmap/serde"]
+# Internal-only. Re-exports crate internals needed by `fuzz/` targets
+# through the `internal` module. NOT part of the public API — any item
+# behind this feature may change or disappear without a SemVer bump.
+__internal = []
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+module_name_repetitions = "allow"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+must_use_candidate = "allow"
+cast_possible_truncation = "allow"
+cast_sign_loss = "allow"
+cast_lossless = "allow"
+cast_possible_wrap = "allow"
+doc_markdown = "allow"
+match_same_arms = "allow"
+needless_continue = "allow"
+needless_pass_by_value = "allow"
+unnecessary_wraps = "allow"
+format_push_string = "allow"
+single_match_else = "allow"
+ptr_as_ptr = "allow"
+ref_as_ptr = "allow"
+manual_let_else = "allow"
+too_many_lines = "allow"
+manual_div_ceil = "allow"
+redundant_closure = "allow"
+manual_is_multiple_of = "allow"
+collapsible_if = "allow"
+needless_lifetimes = "allow"
+match_wildcard_for_single_variants = "allow"
+missing_fields_in_debug = "allow"
+unused_async = "allow"
+no_effect_underscore_binding = "allow"

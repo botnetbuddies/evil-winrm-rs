@@ -1,0 +1,8 @@
+{
+  "generator": "pyspnego 0.12.4",
+  "exported_key": "abababababababababababababababab",
+  "timeout_base64": "LS1FbmNyeXB0ZWQgQm91bmRhcnkNCglDb250ZW50LVR5cGU6IGFwcGxpY2F0aW9uL0hUVFAtU1BORUdPLXNlc3Npb24tZW5jcnlwdGVkDQoJT3JpZ2luYWxDb250ZW50OiB0eXBlPWFwcGxpY2F0aW9uL3NvYXAreG1sO2NoYXJzZXQ9VVRGLTg7TGVuZ3RoPTMyNg0KLS1FbmNyeXB0ZWQgQm91bmRhcnkNCglDb250ZW50LVR5cGU6IGFwcGxpY2F0aW9uL29jdGV0LXN0cmVhbQ0KEAAAAAEAAACXxebASYKg6QAAAABh1lcJmG/3p2Qxnez8wNA2RVcEhvMKVUf4GReswrKfRpylk+rR16nUD0jaNguef0mYevf+x9HpTKMqMo92tstyVtnCLFvcB/dJZ4+N3+Vt0MI2l+P5QYFuuyxeX0EQQcC6rN9m8YbSwbx6aTVMZhofaPr4cVLM4sW60FLA6lt+CoraNGXR3R3ks/tLaBkJVW5aAVHMYo6SpJ3/4wEloNCnPd1i1QwUscXz3/rEPlOvFqkgz9eWdLBCTvXjfaSlE4QxKeFzUs/bkYMmAqgKk7CJXCn/2oNQjjOBVZqqy+uO3ElqjsRpCBZWrJNnSzBHVNFKQ7XV7nwhhqDyN87sghw291w37+Ku/4qL4SliTEqQWiCMGGdpn2NNju1gTD13ujQp/jFrDDbjTJ7TaQoKd2lxlbAI1i2Q36PV/n0geRhhVGxFq/EvnC0tRW5jcnlwdGVkIEJvdW5kYXJ5LS0NCg==",
+  "timeout_plaintext": "<s:Envelope xmlns:s='http://www.w3.org/2003/05/soap-envelope' xmlns:w='http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd'><s:Body><s:Fault><s:Code><s:Value>s:Receiver</s:Value><s:Subcode><s:Value>w:TimedOut</s:Value></s:Subcode></s:Code><s:Reason><s:Text>Receive poll timed out</s:Text></s:Reason></s:Fault></s:Body></s:Envelope>",
+  "success_base64": "LS1FbmNyeXB0ZWQgQm91bmRhcnkNCglDb250ZW50LVR5cGU6IGFwcGxpY2F0aW9uL0hUVFAtU1BORUdPLXNlc3Npb24tZW5jcnlwdGVkDQoJT3JpZ2luYWxDb250ZW50OiB0eXBlPWFwcGxpY2F0aW9uL3NvYXAreG1sO2NoYXJzZXQ9VVRGLTg7TGVuZ3RoPTMzDQotLUVuY3J5cHRlZCBCb3VuZGFyeQ0KCUNvbnRlbnQtVHlwZTogYXBwbGljYXRpb24vb2N0ZXQtc3RyZWFtDQoQAAAAAQAAALDiSiodgXIgAQAAAE66rF5EQjuD+Qh4TJ8FkEMxojOIqUwj2KuqnQ+cuzysJC0tRW5jcnlwdGVkIEJvdW5kYXJ5LS0NCg==",
+  "success_plaintext": "<soap>usable after timeout</soap>"
+}
