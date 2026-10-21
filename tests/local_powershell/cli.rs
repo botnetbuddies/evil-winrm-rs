@@ -13,9 +13,14 @@ async fn command_status_and_json_cli() -> Result<()> {
     let run = async {
         let (port, server) = fixture().await?;
         let session = fixture_session(port, "Microsoft.PowerShell").await?;
+        let native_exit = if cfg!(windows) {
+            "& $env:ComSpec /d /c 'exit 37'"
+        } else {
+            "& /bin/sh -c 'exit 37'"
+        };
         for (script, expected) in [
             ("$global:counter=1; Write-Output 'once'", None),
-            ("& /bin/sh -c 'exit 37'", Some(37)),
+            (native_exit, Some(37)),
             ("Write-Output 'fresh'", None),
             ("Write-Output 'before-exit'; exit 42", Some(42)),
         ] {
@@ -107,7 +112,7 @@ async fn command_status_and_json_cli() -> Result<()> {
         assert_eq!(json["exit_code"], 42);
         assert_eq!(json["success"], false);
         assert!(json["stdout"].as_str().unwrap().contains("before"));
-        let (process, json) = invoke("& /bin/sh -c 'exit 37'", false).await?;
+        let (process, json) = invoke(native_exit, false).await?;
         assert_eq!(process.status.code(), Some(1));
         assert_eq!(json["exit_code"], 37);
         let (process, json) =
@@ -222,13 +227,18 @@ Write-Output ('cwd:' + $pwd.Path)
                 String::from_utf8_lossy(&result.stderr)
             );
             let output = json["stdout"].as_str().unwrap();
-            for expected in [
-                "args:a; 'quote' 世界:0:True",
-                "env:value; ' 世界=ok",
-                directory.to_str().unwrap(),
-            ] {
+            for expected in ["args:a; 'quote' 世界:0:True", "env:value; ' 世界=ok"] {
                 assert!(output.contains(expected), "{source}: {json}");
             }
+            let cwd = output
+                .lines()
+                .find_map(|line| line.strip_prefix("cwd:"))
+                .context("missing remote working directory")?;
+            assert_eq!(
+                std::fs::canonicalize(cwd)?,
+                directory.canonicalize()?,
+                "{source}: {json}"
+            );
             assert!(!String::from_utf8_lossy(&result.stderr).contains("fixture password"));
         }
         url_server.abort();

@@ -155,14 +155,39 @@ async fn powershell_runspace_and_file_transfers() -> Result<()> {
             b"nested contents"
         );
         let wildcard = root.path().join("wildcard results");
+        let remote_sub = remote_tree.join("sub");
+        let wildcard_source = if cfg!(windows) {
+            session
+                .raw(&format!(
+                    "(New-Object -ComObject Scripting.FileSystemObject).GetFolder({}).ShortPath",
+                    quote(remote_sub.to_str().unwrap())
+                ))
+                .await?
+                .trim()
+                .to_owned()
+        } else {
+            remote_sub.to_string_lossy().into_owned()
+        };
         transfer::download(
             &session,
-            &format!("{}/*.txt", remote_tree.join("sub").display()),
+            &format!("{wildcard_source}/*.txt"),
             Some(&wildcard),
         )
         .await?;
         assert_eq!(
             std::fs::read(wildcard.join("a's 世界.txt"))?,
+            b"nested contents"
+        );
+        session
+            .raw(&format!(
+                "Set-Location -LiteralPath {}",
+                quote(remote_sub.to_str().unwrap())
+            ))
+            .await?;
+        let relative_wildcard = root.path().join("relative wildcard results");
+        transfer::download(&session, "*.txt", Some(&relative_wildcard)).await?;
+        assert_eq!(
+            std::fs::read(relative_wildcard.join("a's 世界.txt"))?,
             b"nested contents"
         );
         let failures = session

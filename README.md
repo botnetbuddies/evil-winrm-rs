@@ -8,7 +8,7 @@ A native Rust WinRM shell for Linux and Windows. Persistent PowerShell sessions,
 
 Also includes resumable/compressed transfers, proxy support, JSON output and remote exit codes, a session broker shared by CLI and MCP clients, and SOCKS5 forwarding through Windows.
 
-**[Documentation](https://github.com/botnetbuddies/evil-winrm-rs/wiki)** · [Build and install](https://github.com/botnetbuddies/evil-winrm-rs/wiki/Build-and-install) · [Authentication](https://github.com/botnetbuddies/evil-winrm-rs/wiki/Connections-and-authentication)
+**[Download](https://github.com/botnetbuddies/evil-winrm-rs/releases/latest)** · [Documentation](https://github.com/botnetbuddies/evil-winrm-rs/wiki) · [Authentication](https://github.com/botnetbuddies/evil-winrm-rs/wiki/Connections-and-authentication)
 
 ## Quick start
 
@@ -24,13 +24,11 @@ evil-winrm-rs --help
 
 Inside the shell, run `menu` for helpers. Tab completes commands and paths; Ctrl+C stops the current command or transfer.
 
-## Build
+## Install
 
-```sh
-cargo build --release --locked
-```
+Download the Linux or Windows x64 archive from [releases](https://github.com/botnetbuddies/evil-winrm-rs/releases/latest), extract it, and put the executable on your `PATH`. All features are included; Windows packages use static OpenSSL.
 
-Requires Rust 1.98+ and native build dependencies for the default features. See the [build guide](https://github.com/botnetbuddies/evil-winrm-rs/wiki/Build-and-install) for Linux, Windows, feature selection and Docker.
+Linux packages need glibc 2.39+, OpenSSL 3 and Kerberos/GSSAPI runtime libraries. See [build and install](https://github.com/botnetbuddies/evil-winrm-rs/wiki/Build-and-install) for source builds, feature selection and Docker.
 
 ## Credits and license
 

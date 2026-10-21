@@ -23,5 +23,7 @@ mod session;
 
 #[path = "local_powershell/broker.rs"]
 mod broker;
+#[path = "local_powershell/empty_upload.rs"]
+mod empty_upload;
 #[path = "local_powershell/mcp_client.rs"]
 mod mcp_client;

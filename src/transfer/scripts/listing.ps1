@@ -1,6 +1,8 @@
 param([string]$Path, [bool]$Wildcard)
 if ($Wildcard) {
-    $root = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath((Split-Path $Path -Parent))
+    $parent = Split-Path $Path -Parent
+    if ([string]::IsNullOrEmpty($parent)) { $parent = '.' }
+    $root = (Get-Item -LiteralPath $parent -Force -ErrorAction Stop).FullName
     $items = @(Get-ChildItem -Path $Path -Recurse -Force -ErrorAction Stop)
 } else {
     $item = Get-Item -LiteralPath $Path -Force -ErrorAction Stop

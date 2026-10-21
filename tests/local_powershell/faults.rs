@@ -83,8 +83,7 @@ async fn transfer_faults_preserve_destinations_and_reject_traversal() -> Result<
         "C:\\escape",
         "nested/../../escape",
     ] {
-        let fake = format!("{}/{relative}", tree.display());
-        session.raw(&format!("function global:Get-ChildItem {{ [pscustomobject]@{{ FullName={}; PSIsContainer=$false }} }}", quote(&fake))).await?;
+        session.raw(&format!("function global:Get-ChildItem {{ [pscustomobject]@{{ FullName=((Get-Item -LiteralPath {}).FullName + {}); PSIsContainer=$false }} }}", quote(tree.to_str().unwrap()), quote(&format!("/{relative}")))).await?;
         let error = transfer::download(&session, tree.to_str().unwrap(), Some(&destination))
             .await
             .unwrap_err();
